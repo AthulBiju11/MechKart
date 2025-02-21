@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: mechkart-backend
+
+  data:
+    mongodb:
+      uri: mongodb+srv://athul_biju:dQ8RCMqdwSDE18N3@cluster0.g3lpkvc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      database: mechkart
+
+
+
+jwt:
+  secret: 622a96e7ae67e643cc0fdcb1edb08eada5dcda2ca44c518b83bf51a63dbefcdd794ac664448e86aa7aa33f032a24caff7856a5839c58d5bef7655581a94bb875eaeb3f6fcf68cbf29461d7667cb1c31d423bea90ddeea02b89d2da509971694d27694290bab49e2ef1f66b770a4533c32c9c2d9999018e5324c700d02722915dd73aeeca9d9431cb4ac9256cc78a951b9bebada94512c5c3b17968ac3048379a7ff2ebb713ce9d101063522104ad539c68dbd51de4039af7fde0121747aa2987e2ad7fdc5112ea40453158a73dda6c8f3da97667515afa4908e096bd2ff8c939b43f59ed823aa44f3df97195c3d716fc68af6cdd88cf64d0c1cc3eac6a312e86
+  expiration: 86400000
