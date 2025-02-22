@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import newRequest from "../../utils/newRequest";
 import { CartContext } from "../../context/cartContext";
 import { useDispatch, useSelector } from "react-redux";
-import {selectCartCount} from "../../store/cart/cart.selector.js"
+import { selectCartCount } from "../../store/cart/cart.selector.js";
 import { toast } from "react-toastify";
 import { current } from "@reduxjs/toolkit";
 import { resetCartAction } from "../../store/cart/cart.reducer";
@@ -29,14 +29,10 @@ const Navbar = ({ active }) => {
         return res.data;
       }),
   });
-  
-  useEffect(()=>{
-    
-  },[currentUser])
+
+  useEffect(() => {}, [currentUser]);
 
   const cartNumber = useSelector(selectCartCount);
-
-
 
   const handleProfileClick = () => {
     setProfileDropDown(!profileDropDown);
@@ -58,7 +54,7 @@ const Navbar = ({ active }) => {
   };
 
   const handleNavigate = () => {
-    if(!currentUser){
+    if (!currentUser) {
       toast.error("Sign in to access cart!", {
         position: "top-center",
         autoClose: 5000,
@@ -69,10 +65,10 @@ const Navbar = ({ active }) => {
         progress: undefined,
         theme: "light",
       });
-    }else{
-      navigate('/cart')
+    } else {
+      navigate("/cart");
     }
-  }
+  };
 
   return (
     <>
@@ -175,29 +171,40 @@ const Navbar = ({ active }) => {
               </div>
               {profileDropDown && (
                 <div className="absolute top-full mt-2 right-0 w-screen max-w-[200px] bg-white rounded-md shadow-lg divide-y divide-[#682A85] text-gray-800 z-10">
-                  {currentUser && <Link
-                    to="/profile"
-                    className="block py-2 px-4 hover:bg-gray-100 rounded-md"
-                  >
-                    Profile
-                  </Link>}
-                  {currentUser?.isAdmin ? (
+                  {currentUser && (
+                    <Link
+                      to="/profile"
+                      className="block py-2 px-4 hover:bg-gray-100 rounded-md"
+                    >
+                      Profile
+                    </Link>
+                  )}
+                  {currentUser?.admin ? (
                     <Link
                       to="/admin"
                       className="block py-2 px-4 hover:bg-gray-100"
                     >
                       Admin
                     </Link>
-                  ): (
+                  ) : currentUser ? (
                     <Link
                       to="/user-request"
                       className="block py-2 px-4 hover:bg-gray-100"
                     >
                       Add Request
                     </Link>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="block py-2 px-4 hover:bg-gray-100"
+                      onClick={() =>
+                        toast.error("Please login to add requests")
+                      }
+                    >
+                      Add Request
+                    </Link>
                   )}
                   <div
-                    
                     className="block py-2 px-4 hover:bg-gray-100 cursor-pointer"
                     onClick={handleLogout}
                   >

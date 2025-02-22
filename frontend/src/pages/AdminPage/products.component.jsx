@@ -40,7 +40,7 @@ function Products() {
 
   const mutation = useMutation({
     mutationFn: (product) => {
-      return newRequest.post("/product", product);
+      return newRequest.post("/products", product);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["products"]);

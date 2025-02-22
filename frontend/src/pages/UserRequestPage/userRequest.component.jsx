@@ -6,20 +6,20 @@ function UserRequests() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    requests: "",
+    request: "", // Change from 'requests' to 'request'
     quantity: "",
   });
 
   const {
-    data: requests,
+    data: requests = [], // provide default empty array
     isLoading,
     refetch: refetchRequests,
   } = useQuery(["userRequests"], () =>
-    newRequest.get("/request/user").then((res) => res.data)
+    newRequest.get("/requests/user").then((res) => res.data)
   );
 
   const createRequest = useMutation((newRequestData) =>
-    newRequest.post("/request", newRequestData).then(()=>refetchRequests())
+    newRequest.post("/requests", newRequestData).then(() => refetchRequests())
   );
 
   const handleInputChange = (e) => {
@@ -32,74 +32,104 @@ function UserRequests() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await createRequest.mutateAsync(formData);
-    
+
     setFormData({
       username: "",
       email: "",
-      requests: "",
+      request: "", // Change from 'requests' to 'request'
       quantity: "",
     });
-    
-    
   };
 
   return (
     <div className="px-4 py-8">
       <div className="border border-gray-300 rounded p-6">
         <div>
-          <h2 className="text-center border-b pb-2 font-bold text-xl">
-            Categories
+          <h2 className="text-center border-b pb-2 font-bold text-xl mb-6">
+            Requests
           </h2>
           {isLoading ? (
-            <p>Loading...</p>
-          ) : (
-            <table className="w-full table-fixed border-collapse border">
-              <colgroup>
-                <col className="w-1/6" />
-                <col className="w-1/4" />
-                <col className="w-1/2" />
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-              </colgroup>
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-2 border-b border-r">Username</th>
-                  <th className="px-4 py-2 border-b border-r">Email</th>
-                  <th className="px-4 py-2 border-b border-r">Requests</th>
-                  <th className="px-4 py-2 border-b border-r">Quantity</th>
-                  <th className="px-4 py-2 border-b border-r">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((category) => (
-                  <tr key={category._id} className="bg-white">
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.username}
-                    </td>
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.email}
-                    </td>
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.request}
-                    </td>
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.quantity}
-                    </td>
-                    <td className="flex justify-center px-4 py-2 border-b border-r uppercase">
-                      {category.status === "pending" && (<div className="bg-[yellow] p-2 rounded">Pending</div>)}
-                      {category.status === "accepted" && (<div className="bg-[green] p-2 rounded">Accepted</div>)}
-                      {category.status === "rejected" && (<div className="bg-[red] p-2 rounded">Rejected</div>)}
-                    </td>
+            <div className="text-center py-4">Loading...</div>
+          ) : requests && requests.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
+                      Username
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[35%]">
+                      Requests
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                      Quantity
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
+                      Status
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {requests.map((category) => (
+                    <tr key={category._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div
+                          className="truncate max-w-[150px]"
+                          title={category.username}
+                        >
+                          {category.username}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div
+                          className="truncate max-w-[200px]"
+                          title={category.email}
+                        >
+                          {category.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="line-clamp-2" title={category.request}>
+                          {category.request}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                        {category.quantity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            category.status === "pending" ||
+                            category.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : category.status === "accepted" ||
+                                category.status === "ACCEPTED"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {category.status.charAt(0).toUpperCase() +
+                            category.status.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              No requests found
+            </div>
           )}
         </div>
       </div>
       <div className="mt-6 border border-gray-300 rounded p-6">
         <h2 className="text-center border-b pb-2 font-bold text-xl">
-          Add Category
+          Add Request
         </h2>
         <form
           onSubmit={handleSubmit}
@@ -132,14 +162,12 @@ function UserRequests() {
             />
           </div>
           <div className="flex items-center mb-4 mr-10 w-1/4">
-            <label htmlFor="requests" className="mr-2">
-              Requests:
-            </label>
+            <label htmlFor="request" className="mr-2"></label>
             <input
               type="text"
-              id="requests"
-              name="requests"
-              value={formData.requests}
+              id="request"
+              name="request"
+              value={formData.request}
               onChange={handleInputChange}
               className="border border-gray-300 px-2 py-1 rounded w-full"
             />

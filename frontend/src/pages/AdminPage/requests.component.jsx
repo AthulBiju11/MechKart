@@ -1,20 +1,20 @@
 import React from "react";
-import { useQuery, useMutation, QueryClient, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import newRequest from "../../utils/newRequest";
 
 function Requests() {
-
   const queryClient = useQueryClient();
+
   const {
     data: requests,
     isLoading,
-    refetch: refetchRequests,
   } = useQuery(["allrequests"], () =>
-    newRequest.get("/request").then((res) => res.data)
+    newRequest.get("/requests").then((res) => res.data)
   );
 
-  const createRequest = useMutation(
-    (newRequestData) => newRequest.put("/request", newRequestData),
+  const updateRequestStatus = useMutation(
+    ({ id, status }) => 
+      newRequest.put("/requests", { id, status }),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["allrequests"]);
@@ -22,82 +22,106 @@ function Requests() {
     }
   );
 
-  const handleSubmit = async (e, category) => {
-    e.preventDefault();
-    await createRequest.mutateAsync({
-      validRequest: category,
-      value: e.target.value,
-    });
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      await updateRequestStatus.mutateAsync({ 
+        id, 
+        status: status.toUpperCase() 
+      });
+    } catch (error) {
+      console.error("Error updating request status:", error);
+    }
   };
 
   return (
     <div className="px-4 py-8">
-      <div className="border border-gray-300 rounded p-6">
-        <div>
-          <h2 className="text-center border-b pb-2 font-bold text-xl">
-            Categories
-          </h2>
-          {isLoading ? (
-            <p>Loading...</p>
-          ) : (
-            <table className="w-full table-fixed border-collapse border">
-              <colgroup>
-                <col className="w-1/6" />
-                <col className="w-1/4" />
-                <col className="w-1/2" />
-                <col className="w-1/6" />
-                <col className="w-1/4" /> {/* Column for Buttons */}
-              </colgroup>
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-2 border-b border-r">Username</th>
-                  <th className="px-4 py-2 border-b border-r">Email</th>
-                  <th className="px-4 py-2 border-b border-r">Requests</th>
-                  <th className="px-4 py-2 border-b border-r">Quantity</th>
-                  <th className="px-4 py-2 border-b"></th>
+      <div className="border border-gray-300 rounded-lg shadow-sm">
+        <h2 className="text-center py-4 text-xl font-bold border-b bg-gray-50">
+          Request Management
+        </h2>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Username
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Request
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quantity
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status/Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {requests?.map((category) => (
-                  <tr key={category._id} className="bg-white">
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.username}
+              <tbody className="bg-white divide-y divide-gray-200">
+                {requests?.map((request) => (
+                  <tr key={request.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
+                        {request.username}
+                      </div>
                     </td>
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.email}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 truncate max-w-[200px]">
+                        {request.email}
+                      </div>
                     </td>
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.request}
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 line-clamp-2">
+                        {request.request}
+                      </div>
                     </td>
-                    <td className="px-4 py-2 border-b border-r">
-                      {category.quantity}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {request.quantity}
                     </td>
-                    <td className="px-4 py-2 border-b flex justify-center">
-                      {category.status === "pending" && (
-                        <div>
-                          <button value="accepted" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded mr-2" onClick={(e)=>handleSubmit(e,category)}>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {request.status === "PENDING" ? (
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            onClick={() => handleStatusUpdate(request.id, "ACCEPTED")}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                          >
                             Accept
                           </button>
-                          <button value="rejected"className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" onClick={(e)=>handleSubmit(e,category)}>
+                          <button
+                            onClick={() => handleStatusUpdate(request.id, "REJECTED")}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          >
                             Reject
                           </button>
                         </div>
-                      )}
-                      {category.status === "accepted" && (
-                        <div className="bg-[green] p-2 rounded">Accepted</div>
-                      )}
-                      {category.status === "rejected" && (
-                        <div className="bg-[red] p-2 rounded">Rejected</div>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            request.status === "ACCEPTED"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {request.status.charAt(0) + request.status.slice(1).toLowerCase()}
+                        </span>
                       )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-      
     </div>
   );
 }

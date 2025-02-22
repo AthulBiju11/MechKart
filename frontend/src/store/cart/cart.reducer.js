@@ -4,31 +4,41 @@ import { toast } from "react-toastify";
 
 // Helper function to create payload items from cartItems
 const mapCartItemsToPayload = (cartItems) => {
-  // Filter out any items that do not have a valid product id.
   return cartItems
-    .filter((cartItem) => cartItem._id || cartItem.id)
+    .filter((cartItem) => cartItem.id) // Changed from _id to id
     .map((cartItem) => ({
-      product: { id: cartItem._id || cartItem.id },
+      product: { id: cartItem.id }, // Changed from _id to id
       quantity: cartItem.quantity,
     }));
 };
+
 
 // Thunks for updating local cart then updating database
 export const addItemToCartWithDatabaseUpdate = createAsyncThunk(
   "cart/addItemToCartWithDatabaseUpdate",
   async (product, thunkAPI) => {
+    console.log("Adding product to cart:", product); // Debug log
+
     thunkAPI.dispatch(addItemToCart(product));
 
     const { cartItems } = thunkAPI.getState().cart;
-    const newArray = mapCartItemsToPayload(cartItems);
+    console.log("Current cart items:", cartItems); // Debug log
 
-    const res = await thunkAPI.dispatch(
-      pushCartToDatabase({ items: newArray })
-    );
-    return res.data; // Return a meaningful value if needed
+    const newArray = mapCartItemsToPayload(cartItems);
+    console.log("Mapped payload for database:", newArray); // Debug log
+
+    try {
+      const res = await thunkAPI.dispatch(
+        pushCartToDatabase({ items: newArray })
+      );
+      console.log("Database update response:", res); // Debug log
+      return res.payload;
+    } catch (error) {
+      console.error("Error updating cart in database:", error);
+      throw error;
+    }
   }
 );
-
 export const removeItemFromCartWithDatabaseUpdate = createAsyncThunk(
   "cart/removeItemFromCartWithDatabaseUpdate",
   async (product, thunkAPI) => {
@@ -64,20 +74,13 @@ export const pushCartToDatabase = createAsyncThunk(
   "cart/pushCartToDatabase",
   async (cartItemsPayload, thunkAPI) => {
     try {
+      console.log("Sending cart update to database:", cartItemsPayload); // Debug log
       const res = await newRequest.post("/carts/set", cartItemsPayload.items);
-      console.log("Cart update response:", res);
+      console.log("Database response:", res.data); // Debug log
       return res.data;
     } catch (err) {
-      toast.error(err.response?.data || "Error updating cart in database", {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+      console.error("Error in pushCartToDatabase:", err);
+      toast.error(err.response?.data || "Error updating cart in database");
       return thunkAPI.rejectWithValue(err.response?.data || "Error");
     }
   }
@@ -94,19 +97,11 @@ export const fetchCartFromDatabase = createAsyncThunk(
     }
     try {
       const res = await newRequest.get(`/carts/${userId}`);
-      console.log("Fetched cart data:", res.data);
+      console.log("Fetched cart data:", res.data); // Debug log
       return res.data;
     } catch (err) {
-      toast.error(err.response?.data || "Error fetching cart from database", {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+      console.error("Error fetching cart:", err);
+      toast.error(err.response?.data || "Error fetching cart from database");
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
   }
@@ -115,11 +110,12 @@ export const fetchCartFromDatabase = createAsyncThunk(
 // Local cart modifications
 const addCartItem = (cartItems, productToAdd) => {
   const existingCartItem = cartItems.find(
-    (cartItem) => cartItem._id === productToAdd._id
+    (cartItem) => cartItem.id === productToAdd.id // Changed from _id to id
   );
+
   if (existingCartItem) {
     return cartItems.map((cartItem) =>
-      cartItem._id === productToAdd._id
+      cartItem.id === productToAdd.id // Changed from _id to id
         ? { ...cartItem, quantity: cartItem.quantity + 1 }
         : cartItem
     );
@@ -129,22 +125,24 @@ const addCartItem = (cartItems, productToAdd) => {
 
 const removeCartItem = (cartItems, cartItemToRemove) => {
   const existingCartItem = cartItems.find(
-    (cartItem) => cartItem._id === cartItemToRemove._id
+    (cartItem) => cartItem.id === cartItemToRemove.id // Changed from _id to id
   );
+
   if (existingCartItem.quantity === 1) {
     return cartItems.filter(
-      (cartItem) => cartItem._id !== cartItemToRemove._id
+      (cartItem) => cartItem.id !== cartItemToRemove.id // Changed from _id to id
     );
   }
+
   return cartItems.map((cartItem) =>
-    cartItem._id === cartItemToRemove._id
+    cartItem.id === cartItemToRemove.id // Changed from _id to id
       ? { ...cartItem, quantity: cartItem.quantity - 1 }
       : cartItem
   );
 };
 
 const clearCartItem = (cartItems, cartItemToClear) =>
-  cartItems.filter((cartItem) => cartItem._id !== cartItemToClear._id);
+  cartItems.filter((cartItem) => cartItem.id !== cartItemToClear.id); // Changed from _id to id
 
 // Initial state
 const CART_INITIAL_STATE = {

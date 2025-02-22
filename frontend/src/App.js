@@ -63,7 +63,7 @@ const App = () => {
                 <Route path="/faq" element={<Faq />} />
                 {currentUser && (<Route path="/cart" element={<Cart />} />)}             
 
-                {currentUser?.isAdmin && (
+                {currentUser?.admin && (
                   <Route path="/admin" element={<Admin />} />
                 )}
                 
